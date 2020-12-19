@@ -10,7 +10,6 @@ var wpClient = wordpress.createClient({
 });
 
 //twitter connection
-
 const twitterClient = new Twitter({
     consumer_key: process.env.consumer_key,
     consumer_secret: process.env.consumer_secret,
@@ -30,6 +29,7 @@ function getRandomInt(max) {
 }
 
 function parseContent(data) {
+    let regex = /(<\/?(p|br)>)+|(<!-- \/?wp:paragraph -->)+/gmi
     let text = data.replace(regex, "").trim()
     let randNum = getRandomInt(text.length-1)
     let randDiff = text.length-1-randNum
@@ -43,20 +43,6 @@ function parseContent(data) {
     return parsedString
 }
 
-let regex = /(<\/?(p|br)>)+|(<!-- \/?wp:paragraph -->)+/gmi
-
-wpClient.getPosts(function( error, posts ) {
-    if (error) throw error
-    else {
-        // grab a random post, destructure array, console.log data
-        let {title, author, content, link} = posts[getRandomInt(posts.length)]
-        console.log("\ntitle: "+ title + "\nauthor: " + wpIDMatch(author) + "\ncontent: " + parseContent(content) + "\nlink: " + link)
-
-        const thread = [parseContent(content), `${title} by ${wpIDMatch(author)}`,`find at ${link}` ];
-        tweetThread(thread).catch(console.error);
-    }
-});
-
 async function tweetThread(thread) {
     let lastTweetID = "";
     for (const status of thread) {
@@ -68,5 +54,14 @@ async function tweetThread(thread) {
       lastTweetID = tweet.id_str;
     }
 }
-  
- 
+
+wpClient.getPosts(function( error, posts ) {
+    if (error) throw error
+    else {
+        // grab a random post, destructure array, console.log data
+        let {title, author, content, link} = posts[getRandomInt(posts.length)]
+        
+        const thread = [parseContent(content), `${title} by ${wpIDMatch(author)}`,`find at ${link}` ];
+        tweetThread(thread).catch(console.error);
+    }
+}); 
