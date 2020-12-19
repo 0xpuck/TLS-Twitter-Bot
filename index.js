@@ -1,15 +1,27 @@
 var wordpress = require( "wordpress" );
+var Twitter = require('twitter-lite');
 require('dotenv').config()
 
-var client = wordpress.createClient({
+//wordpress connection
+var wpClient = wordpress.createClient({
     url: process.env.URL,
     username: process.env.USER,
     password: process.env.PASSWORD
 });
 
+//twitter connection
+
+const twitterClient = new Twitter({
+    consumer_key: process.env.consumer_key,
+    consumer_secret: process.env.consumer_secret,
+    access_token_key: process.env.access_token,
+    access_token_secret: process.env.access_token_secret
+});
+  
+// helper functions
 function wpIDMatch(name) {
     if (name === "198574942") {
-        return "Alex Taylor"
+        return "TestBot"
     }
 }
 
@@ -18,8 +30,6 @@ function getRandomInt(max) {
 }
 
 function parseContent(data) {
-    // get length of text
-    // pick a random number from 0 to length-1
     let text = data.replace(regex, "").trim()
     let randNum = getRandomInt(text.length-1)
     let randDiff = text.length-1-randNum
@@ -30,21 +40,33 @@ function parseContent(data) {
 
     parsedString = text.substring(randNum,randDiff+randNum)
     parsedString = "..." + parsedString + "..."
-
     return parsedString
 }
 
 let regex = /(<\/?(p|br)>)+|(<!-- \/?wp:paragraph -->)+/gmi
 
-client.getPosts(function( error, posts ) {
+wpClient.getPosts(function( error, posts ) {
     if (error) throw error
     else {
         // grab a random post, destructure array, console.log data
-        
         let {title, author, content, link} = posts[getRandomInt(posts.length)]
+        console.log("\ntitle: "+ title + "\nauthor: " + wpIDMatch(author) + "\ncontent: " + parseContent(content) + "\nlink: " + link)
 
-        // console.log("\ntitle: "+ title + "\nauthor: " + wpIDMatch(author) + "\ncontent: " + content.replace(regex, "") + "\nlink: " + link)
-
-        console.log(parseContent(content))        
+        const thread = [parseContent(content), `${title} by ${wpIDMatch(author)}`,`find at ${link}` ];
+        tweetThread(thread).catch(console.error);
     }
 });
+
+async function tweetThread(thread) {
+    let lastTweetID = "";
+    for (const status of thread) {
+      const tweet = await twitterClient.post("statuses/update", {
+        status: status,
+        in_reply_to_status_id: lastTweetID,
+        auto_populate_reply_metadata: true
+      });
+      lastTweetID = tweet.id_str;
+    }
+}
+  
+ 
