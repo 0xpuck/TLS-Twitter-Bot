@@ -15,24 +15,16 @@ let wpIDMatch = function(name) {
         return "Alex Taylor"
     }
 }
- 
-//html cleanup helper function / package such as https://www.npmjs.com/package/sanitize-html
+
+let regex = /(<\/?(p|br)>)+|(<!-- \/?wp:paragraph -->)+/gmi
 
 client.getPosts(function( error, posts ) {
     if (error) throw error
     else {
         for (let i = 0; i < posts.length; i++) {
             console.log(
-                `Post ${i}: 
-                --------------------
-                Title: ${posts[i].title}
-                Link: ${posts[i].link}
-                Author: ${wpIDMatch(posts[i].author)}
-                Content: ${posts[i].content}
-                ---------------------
-                `
+                `Post ${i}: \nTitle: ${posts[i].title}\nLink: ${posts[i].link}\nAuthor: ${wpIDMatch(posts[i].author)}\nContent: \n${posts[i].content.replace(regex," ")}`
             )
-            // console.log(posts[i])
         }
     }
 });
