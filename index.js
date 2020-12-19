@@ -1,9 +1,9 @@
-var wordpress = require( "wordpress" );
-var Twitter = require('twitter-lite');
+const wordpress = require( "wordpress" );
+const Twitter = require('twitter-lite');
 require('dotenv').config()
 
 //wordpress connection
-var wpClient = wordpress.createClient({
+const wpClient = wordpress.createClient({
     url: process.env.URL,
     username: process.env.USER,
     password: process.env.PASSWORD
@@ -61,7 +61,7 @@ wpClient.getPosts(function( error, posts ) {
         // grab a random post, destructure array, console.log data
         let {title, author, content, link} = posts[getRandomInt(posts.length)]
         
-        const thread = [parseContent(content), `${title} by ${wpIDMatch(author)}`,`find at ${link}` ];
+        const thread = [parseContent(content), `${title} by ${wpIDMatch(author)} ${link}`];
         tweetThread(thread).catch(console.error);
     }
 }); 
