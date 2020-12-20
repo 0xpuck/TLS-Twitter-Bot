@@ -26,23 +26,30 @@ function wpIDMatch(name) {
     }
 }
 
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min) + min);
 }
 
 function parseContent(data) {
     let regex = /(<\/?(p|br)>)+|(<!-- \/?wp:paragraph -->)+/gmi
     let text = data.replace(regex, "").trim()
-    let randNum = getRandomInt(text.length-1)
-    let randDiff = text.length-1-randNum
+    return text
+}
 
-    if (randDiff > 120 - 6){
-        randDiff = 120 - 6
+let nlpSentences = function(text) {
+    let doc = nlp(text)
+    let sentences = doc.sentences();
+    return sentences
+}
+
+let limitLength = function(text){
+    if (text.length <= 280) {
+        return text
+    } else {
+        return text.slice(0,277) + "..." 
     }
-
-    parsedString = text.substring(randNum,randDiff+randNum)
-    parsedString = "..." + parsedString + "..."
-    return parsedString
 }
 
 async function tweetThread(thread) {
@@ -60,69 +67,18 @@ async function tweetThread(thread) {
 wpClient.getPosts(function( error, posts ) {
     if (error) throw error
     else {
-        // grab a random post, destructure array, console.log data
-        let {title, author, content, link} = posts[getRandomInt(posts.length)]
-
-        let documentNLP = nlpGeneral(parseContent(content))
-        let docTags = documentNLP.out('text')
-
+        // grab a random post, destructure array, pull out html tags, pick a random sentence
+        let postIndex = getRandomInt(0,posts.length);
+        let {title, author, content, link} = posts[postIndex]
         let sentences = nlpSentences(parseContent(content));    
-        let sentencesTags = sentences.out('tags');
 
-        // get number of sentences
-        // pick a random starting index
+        // get number of sentences, pick random sentence to use
+        let sentenceNum = sentences.json().length
+        let randIndex = getRandomInt(0,sentenceNum)
+        let randomLine = limitLength(sentences.json()[randIndex].text)
 
-        let sentenceNum = sentencesTags.length
-        let randIndex = getRandomInt(0,sentenceNum-1)
-    
-        let posNLP = Object.values(sentencesTags[index]);
-
-        console.log(posNLP)
-
-        // adding "#" to the beginning of each tag so they can be used in .match()
-        for (let i = 0; i < posNLP.length; i++){
-            if (posNLP[i].length === 1) {
-                posNLP[i] = "#" + posNLP[i] 
-            }
-            else {
-                for (let j = 0; j < posNLP[i].length; j++) {
-                    posNLP[i][j] = "#" + posNLP[i][j] 
-                }
-            }
-        }
-
-        for (let i = 0; i < posNLP.length; i++) {
-            // if the value at the index is a string, or single value
-            if (typeof posNLP[i] == "string") {
-
-                // find all words that match the term, pick one random one and concat
-                let match = documentNLP.match(posNLP[i]).json()
-                let randomSelection = match[getRandomInt(0,match.length-1)]
-
-                if (randomSelection != undefined) {
-                    saveString+= randomSelection.text + " "
-                }
-            }
-            // if the value is an object, or has multiple values
-            else {
-                let subArrayStr = ""
-                let subArrayLoopRandom = getRandomInt(0, posNLP[i].length-1)
-
-                // pulling a random number of tags to vary specificity
-                for (let j = 0; j < subArrayLoopRandom; j++){
-                    subArrayStr += " " + posNLP[i][j]
-                }
-                //searching for all words that match tags, pulling a random word from that list
-                let match = documentNLP.match(subArrayStr).json()
-                let randomSelection = match[getRandomInt(0,match.length-1)]
-
-                if (randomSelection != undefined) {
-                    saveString+= randomSelection.text + " "
-                }   
-            }
-        }
-     
-        const thread = [parseContent(content), `${title} by ${wpIDMatch(author)} ${link}`];
-        // tweetThread(thread).catch(console.error);
+        // make tweet
+        const thread = [randomLine, `${title} by ${wpIDMatch(author)} ${link}`];
+        tweetThread(thread).catch(console.error);
     }
 }); 
