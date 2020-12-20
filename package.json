@@ -9,6 +9,8 @@
   "author": "Alex Taylor @altays",
   "license": "MIT",
   "dependencies": {
+    "compromise": "^13.8.0",
+    "compromise-sentences": "^0.1.1",
     "dotenv": "^8.2.0",
     "twitter-lite": "^0.14.0",
     "wordpress": "^1.4.1"
