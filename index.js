@@ -60,7 +60,7 @@ let limitLength = function(text){
 async function tweetThread(thread) {
     let lastTweetID = "";
     for (const status of thread) {
-      const tweet = await twitterClient.post("statuses/update", {
+      const tweet = await twitterClient.post("/statuses/update", {
         status: status,
         in_reply_to_status_id: lastTweetID,
         auto_populate_reply_metadata: true
@@ -114,7 +114,7 @@ const intervalObj = setInterval(() => {
             // make tweet
             const thread = [cleanString, `${title} by ${wpIDMatch(author)} @ ${link}`];
             tweetThread(thread).catch(console.error);
-            // console.log(thread)
+            console.log(thread)
         }
     }); 
   }, dayInMS);
