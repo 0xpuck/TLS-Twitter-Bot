@@ -71,29 +71,6 @@ async function tweetThread(thread) {
 
 let dayInMS = 86400000
 
-wpClient.getPosts(function( error, posts ) {
-    if (error) throw error
-    else {
-        // grab a random post, destructure array, pull out html tags, pick a random sentence
-        let postIndex = getRandomInt(0,posts.length);
-        let {title, author, content, link} = posts[postIndex]
-        let sentences = nlpSentences(parseContent(content));    
-
-        // get number of sentences, pick random sentence to use
-        let sentenceNum = sentences.json().length
-        let randIndex = getRandomInt(0,sentenceNum)
-        let randomLine = limitLength(sentences.json()[randIndex].text)
-        let regex = /(<\w+>)|(<\/\w+>)|(\&nbsp\;)|(\&nbsp)/gi
-        let cleanString = randomLine.replace(regex, "");
-        // console.log(randomLine.match(regex))
-
-        // make tweet
-        const thread = [cleanString, `${title} by ${wpIDMatch(author)} @ ${link}`];
-        tweetThread(thread).catch(console.error);
-        // console.log(thread)
-    }
-})
-
 const intervalObj = setInterval(() => {
     wpClient.getPosts(function( error, posts ) {
         if (error) throw error
@@ -114,7 +91,7 @@ const intervalObj = setInterval(() => {
             // make tweet
             const thread = [cleanString, `${title} by ${wpIDMatch(author)} @ ${link}`];
             tweetThread(thread).catch(console.error);
-            console.log(thread)
+            // console.log(thread)
         }
     }); 
   }, dayInMS);
