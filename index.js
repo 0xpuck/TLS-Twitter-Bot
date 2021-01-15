@@ -2,7 +2,10 @@ const wordpress = require( "wordpress" );
 const Twitter = require('twitter-lite');
 const nlp = require('compromise');
 nlp.extend(require('compromise-sentences'))
-require('dotenv').config()
+
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
 
 //wordpress connection
 const wpClient = wordpress.createClient({
